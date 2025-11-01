@@ -108,16 +108,16 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ec2-ssh-key']) {
-                    withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} '
-                            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                            docker stop ypass-app || true
-                            docker rm ypass-app || true
-                            docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
-                            '
-                        """
-                    }
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} '
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        docker stop ypass-app || true
+                        docker rm ypass-app || true
+                        docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                        '
+                    """
                 }
             }
         }
