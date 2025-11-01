@@ -111,12 +111,11 @@ pipeline {
                     withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
                         sh """
                             ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} '
+                            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                             docker stop ypass-app || true
                             docker rm ypass-app || true
-                            docker run -d --name ypass-app -p 5000:5000 \
-                            -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-                            -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-                            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest'
+                            docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                            '
                         """
                     }
                 }
