@@ -58,6 +58,8 @@
 
 
 
+
+
 pipeline {
     agent any
 
@@ -65,7 +67,7 @@ pipeline {
         AWS_CREDENTIALS = credentials('aws-access-key-id') 
         ECR_REGISTRY = "503561414328.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPOSITORY = "ypass-app"
-        EC2_IP = "ec2-54-159-40-115.compute-1.amazonaws.com"
+        EC2_IP = "54.159.40.115"  // Use IP address instead of DNS name
     }
 
     stages {
@@ -77,11 +79,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
-                    sh 'docker --version'
-                    script {
-                        docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
-                    }
+                sh 'docker --version'
+                script {
+                    docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
                 }
             }
         }
@@ -94,13 +94,11 @@ pipeline {
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
-                    withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
-                        sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                        sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
-                        sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
-                        sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
-                        sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
-                    }
+                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                    sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
+                    sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+                    sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
+                    sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
                 }
             }
         }
@@ -115,15 +113,13 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                     ]]) {
                         sh """
-                            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} '
-                                export PATH=/usr/local/bin:/usr/bin:/bin
-                                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                                /usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/local/bin/docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                                /usr/bin/docker stop ypass-app || true
-                                /usr/bin/docker rm ypass-app || true
-                                /usr/bin/docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
-                            '
+                            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} \
+                            'export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} && \
+                             export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} && \
+                             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY} && \
+                             docker stop ypass-app || true && \
+                             docker rm ypass-app || true && \
+                             docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest'
                         """
                     }
                 }
