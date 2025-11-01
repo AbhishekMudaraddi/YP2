@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/your-username/flask-auth-app.git'
+                git 'https://https://github.com/AbhishekMudaraddi/YP2'
             }
         }
         
