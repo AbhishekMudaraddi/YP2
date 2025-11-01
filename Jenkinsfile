@@ -119,10 +119,10 @@ pipeline {
                                 export PATH=/usr/local/bin:/usr/bin:/bin
                                 export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                                 export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                                docker stop ypass-app || true
-                                docker rm ypass-app || true
-                                docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                                /usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/local/bin/docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                /usr/bin/docker stop ypass-app || true
+                                /usr/bin/docker rm ypass-app || true
+                                /usr/bin/docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
                             '
                         """
                     }
