@@ -85,7 +85,7 @@ pipeline {
                     sh 'docker --version'
                     script {
                         // Build the image once with a proper tag
-                        dockerImage = docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
+                        def dockerImage = docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
                     }
                 }
             }
@@ -100,13 +100,13 @@ pipeline {
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
                     script {
-                        // Login to ECR
-                        sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                        // Push the image
-                        sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
-                        sh "docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
-                        sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
-                        sh "docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+                        // Login to ECR - using absolute path to commands
+                        sh "/usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/local/bin/docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                        // Push the image - using absolute path to docker
+                        sh "/usr/local/bin/docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
+                        sh "/usr/local/bin/docker tag ${ECR_REPOSITORY}:${env.BUILD_ID} ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+                        sh "/usr/local/bin/docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${env.BUILD_ID}"
+                        sh "/usr/local/bin/docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
                     }
                 }
             }
@@ -116,10 +116,10 @@ pipeline {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} \
-                        'docker stop ypass-app || true && \
-                         docker rm ypass-app || true && \
-                         docker run -d --name ypass-app \
+                        /usr/bin/ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} \
+                        '/usr/bin/docker stop ypass-app || true && \
+                         /usr/bin/docker rm ypass-app || true && \
+                         /usr/bin/docker run -d --name ypass-app \
                          -p 5000:5000 \
                          -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
                          -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
