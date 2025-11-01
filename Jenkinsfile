@@ -82,13 +82,12 @@ pipeline {
                     sh 'docker --version'
                     sh 'docker build -t ypass-app .'
                 }
-                    script {
-                        dockerImage = docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
-                    }
+                script {
+                    dockerImage = docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
                 }
             }
         }
-
+        
         stage('Push to ECR') {
             steps {
                 withCredentials([[
