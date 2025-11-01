@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://https://github.com/AbhishekMudaraddi/YP2.git'
+                git branch: 'main', url: 'https://github.com/AbhishekMudaraddi/YP2.git'
             }
         }
         
