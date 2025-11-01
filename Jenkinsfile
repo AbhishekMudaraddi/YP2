@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_CREDENTIALS = credentials('aws-access-key-id') 
         ECR_REGISTRY = "your-aws-account-id.dkr.ecr.us-east-1.amazonaws.com"
-        ECR_REPOSITORY = "flask-auth-app"
+        ECR_REPOSITORY = "ypass-app"
         EC2_IP = "your-ec2-public-ip"
     }
     
@@ -15,13 +15,16 @@ pipeline {
             }
         }
         
+      stages {
         stage('Build Docker Image') {
-    steps {
-        withEnv(["PATH+EXTRA=/usr/local/bin"]) {
-            sh 'docker build -t flask-auth-app .'
+            steps {
+                withEnv(["PATH+EXTRA=/usr/local/bin"]) {
+                    sh 'docker --version'
+                    sh 'docker build -t ypass-app .'
+                }
+            }
         }
     }
-}
         
         stage('Push to ECR') {
             steps {
@@ -39,9 +42,9 @@ pipeline {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} \
-                        'docker stop flask-auth-app || true && \
-                         docker rm flask-auth-app || true && \
-                         docker run -d --name flask-auth-app \
+                        'docker stop ypass-app || true && \
+                         docker rm ypass-app || true && \
+                         docker run -d --name ypass-app \
                          -p 5000:5000 \
                          -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
                          -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
