@@ -107,23 +107,24 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-access-key-id',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
-                    sshagent(['ec2-ssh-key']) {
-                        withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
-                            sh '''#!/bin/bash
-                                /usr/bin/ssh -o StrictHostKeyChecking=no ec2-user@''' + "${EC2_IP}" + ''' '
-                                    export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
-                                    /usr/bin/docker stop ypass-app || true
-                                    /usr/bin/docker rm ypass-app || true
-                                    /usr/bin/docker run -d --name ypass-app -p 5000:5000 ''' + "${ECR_REGISTRY}/${ECR_REPOSITORY}:latest" + '''
-                                '
-                            '''
-                        }
+                sshagent(['ec2-ssh-key']) {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-access-key-id',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} '
+                                export PATH=/usr/local/bin:/usr/bin:/bin
+                                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                docker stop ypass-app || true
+                                docker rm ypass-app || true
+                                docker run -d --name ypass-app -p 5000:5000 ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                            '
+                        """
                     }
                 }
             }
