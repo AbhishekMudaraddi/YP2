@@ -78,8 +78,10 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                withEnv(["PATH+EXTRA=/usr/local/bin"]) {
+                withEnv(["PATH+EXTRA=/usr/local/bin:/usr/bin:/bin"]) {
                     sh 'docker --version'
+                    sh 'docker build -t ypass-app .'
+                }
                     script {
                         dockerImage = docker.build("${ECR_REPOSITORY}:${env.BUILD_ID}")
                     }
