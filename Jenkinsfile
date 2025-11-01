@@ -14,7 +14,7 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/AbhishekMudaraddi/YP2.git'
             }
         }
-        
+    }
       stages {
         stage('Build Docker Image') {
             steps {
