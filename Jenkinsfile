@@ -2,8 +2,7 @@ pipeline {
     agent any
     
     environment {
-       environment {
-        AWS_CREDENTIALS = credentials('aws-access-key-id') // single ID for both
+        AWS_CREDENTIALS = credentials('aws-access-key-id') 
         ECR_REGISTRY = "your-aws-account-id.dkr.ecr.us-east-1.amazonaws.com"
         ECR_REPOSITORY = "flask-auth-app"
         EC2_IP = "your-ec2-public-ip"
