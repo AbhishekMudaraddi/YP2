@@ -16,12 +16,12 @@ pipeline {
         }
         
         stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("${ECR_REPOSITORY}")
-                }
-            }
+    steps {
+        withEnv(["PATH+EXTRA=/usr/local/bin"]) {
+            sh 'docker build -t flask-auth-app .'
         }
+    }
+}
         
         stage('Push to ECR') {
             steps {
